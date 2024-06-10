@@ -47,6 +47,14 @@ export function useSession(
             navigate("/");
             return;
           }
+          if (err.status === 409) {
+            notifications.show({
+              message: err.description,
+              color: "yellow",
+              autoClose: 4000,
+            });
+            return;
+          }
         }
 
         console.error(err);

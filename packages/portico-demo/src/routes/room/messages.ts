@@ -1,10 +1,13 @@
 import { notifications } from "@mantine/notifications";
 import type { Message } from "portico-demo-server";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useLocation } from "wouter";
 
 import type { Channel } from "../../api";
 
 export function useMessages(channel: Channel | undefined) {
+  const [_location, navigate] = useLocation();
+
   const [connected, setConnected] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
 
@@ -30,7 +33,7 @@ export function useMessages(channel: Channel | undefined) {
     if (channel == null) return;
 
     channel.onopen = () => setConnected(true);
-    channel.onclose = (event) => {
+    channel.onclose = (event, left) => {
       setConnected(false);
 
       if (!event.wasClean) {
@@ -39,6 +42,11 @@ export function useMessages(channel: Channel | undefined) {
           color: "yellow",
           autoClose: 4000,
         });
+      }
+
+      if (left) {
+        // TODO: it's odd that this handling is inside useMessages
+        navigate("/");
       }
     };
 

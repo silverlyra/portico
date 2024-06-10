@@ -1,4 +1,5 @@
 import { ActionIcon, Indicator } from "@mantine/core";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   IconMessages,
   IconMicrophone,
@@ -7,13 +8,14 @@ import {
   IconVideo,
 } from "@tabler/icons-react";
 import type { Tunnel } from "portico";
+import { useLocation } from "wouter";
 
 import type { Channel } from "../../api";
+import { useStreamControls } from "./media";
 import { useMessages } from "./messages";
 import { useSession } from "./session";
-import "./room.css";
 import { useEndpointDiscovery, useLocalStream, useTunnel } from "./tunnel";
-import { useEffect, useRef, useState } from "react";
+import "./room.css";
 
 const DISCOVERY =
   "https://taskroulette.metered.live/api/v1/turn/credentials?apiKey=c3c0374cd434ee6a930bb194265abc89d568";
@@ -24,7 +26,7 @@ export interface Props {
 
 export default function Room({ slug }: Props) {
   const [session, channel] = useSession(slug);
-  const { unread } = useMessages(channel);
+  const { connected, unread } = useMessages(channel);
 
   const local = useLocalStream(channel);
   const endpoint = useEndpointDiscovery(DISCOVERY);
@@ -36,7 +38,12 @@ export default function Room({ slug }: Props) {
         <h1>{session?.room.slug ?? slug}</h1>
       </header>
       <Viewers tunnel={tunnel} local={local} />
-      <Controls channel={channel} unread={unread} />
+      <Controls
+        channel={channel}
+        local={local}
+        connected={connected}
+        unread={unread}
+      />
     </div>
   );
 }
@@ -87,28 +94,47 @@ function Viewer({
 
 function Controls({
   channel,
+  local,
+  connected,
   unread,
 }: {
   channel: Channel | undefined;
+  local: MediaStream | undefined;
+  connected: boolean;
   unread: number;
 }) {
+  const [_location, navigate] = useLocation();
+  const { audio, video } = useStreamControls(local);
+
+  const endCall = useCallback(() => {
+    if (connected && channel != null) {
+      channel.send({ type: "leave" });
+    } else {
+      navigate("/");
+    }
+  }, [connected, channel, navigate]);
+
   return (
     <footer role="navigation">
       <ActionIcon
-        variant="light"
-        color="green"
+        variant={video.available && !video.enabled ? "filled" : "light"}
+        color={video.available ? (video.enabled ? "green" : "red") : "gray"}
         size="xl"
         radius="xl"
-        aria-label="Enable video"
+        aria-label="Toggle camera"
+        disabled={!video.available}
+        onClick={video.toggle}
       >
         <IconVideo style={{ width: "70%", height: "70%" }} />
       </ActionIcon>
       <ActionIcon
-        variant="light"
-        color="green"
+        variant={audio.available && !audio.enabled ? "filled" : "light"}
+        color={audio.available ? (audio.enabled ? "green" : "red") : "gray"}
         size="xl"
         radius="xl"
-        aria-label="Enable voice"
+        aria-label="Toggle microphone"
+        disabled={!audio.available}
+        onClick={audio.toggle}
       >
         <IconMicrophone style={{ width: "70%", height: "70%" }} />
       </ActionIcon>
@@ -118,6 +144,7 @@ function Controls({
         size="xl"
         radius="xl"
         aria-label="End call"
+        onClick={endCall}
       >
         <IconPhoneOff style={{ width: "70%", height: "70%" }} />
       </ActionIcon>

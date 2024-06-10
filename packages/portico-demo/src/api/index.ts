@@ -126,11 +126,12 @@ export class Client {
 
 export class Channel {
   public onopen?: () => void;
-  public onclose?: (event: CloseEvent) => void;
+  public onclose?: (event: CloseEvent, left: boolean) => void;
   private _onmessage?: (message: Message) => void;
   private _onsignal?: (signal: Signal) => void;
 
   private queue: Event[] = [];
+  private leaving = false;
 
   constructor(private readonly ws: WebSocket) {
     ws.onopen = this.opened.bind(this);
@@ -162,6 +163,7 @@ export class Channel {
   }
 
   public send(request: Request) {
+    if (request.type === "leave") this.leaving = true;
     this.ws.send(JSON.stringify(request));
   }
 
@@ -221,7 +223,10 @@ export class Channel {
   }
 
   private closed(event: CloseEvent) {
-    this.onclose?.(event);
+    const left = this.leaving;
+    this.leaving = false;
+
+    this.onclose?.(event, left);
   }
 }
 
