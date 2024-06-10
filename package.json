@@ -1,0 +1,46 @@
+{
+  "name": "portico",
+  "version": "0.0.1",
+  "description": "WebRTC",
+  "type": "module",
+  "main": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    "import": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.mjs"
+    }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/silverlyra/portico.git"
+  },
+  "keywords": [
+    "webrtc"
+  ],
+  "author": "Lyra Naeseth <lyra@lyra.codes>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/silverlyra/portico/issues"
+  },
+  "homepage": "https://github.com/silverlyra/portico#readme",
+  "scripts": {
+    "build": "pkgroll",
+    "prepublishOnly": "pkgroll",
+    "check": "biome check . && tsc --build --project .",
+    "format": "biome format --write .",
+    "format:check": "biome format",
+    "lint": "biome check . --apply-unsafe",
+    "lint:check": "biome ci .",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "1.8.0",
+    "pkgroll": "2.1.1",
+    "typescript": "5.4.5"
+  },
+  "workspaces": [
+    "packages/portico-demo",
+    "packages/portico-demo-server"
+  ]
+}
