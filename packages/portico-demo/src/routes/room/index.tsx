@@ -1,11 +1,13 @@
 import { ActionIcon, Indicator } from "@mantine/core";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   IconMessages,
   IconMicrophone,
+  IconMicrophoneOff,
   IconPhoneOff,
   IconSettings,
   IconVideo,
+  IconVideoOff,
 } from "@tabler/icons-react";
 import type { Tunnel } from "portico";
 import { useLocation } from "wouter";
@@ -114,6 +116,8 @@ function Controls({
     }
   }, [connected, channel, navigate]);
 
+  const iconStyle = useMemo(() => ({ width: "70%", height: "70%" }), []);
+
   return (
     <footer role="navigation">
       <ActionIcon
@@ -125,7 +129,11 @@ function Controls({
         disabled={!video.available}
         onClick={video.toggle}
       >
-        <IconVideo style={{ width: "70%", height: "70%" }} />
+        {video.enabled ? (
+          <IconVideo style={iconStyle} />
+        ) : (
+          <IconVideoOff style={iconStyle} />
+        )}
       </ActionIcon>
       <ActionIcon
         variant={audio.available && !audio.enabled ? "filled" : "light"}
@@ -136,7 +144,11 @@ function Controls({
         disabled={!audio.available}
         onClick={audio.toggle}
       >
-        <IconMicrophone style={{ width: "70%", height: "70%" }} />
+        {audio.enabled ? (
+          <IconMicrophone style={iconStyle} />
+        ) : (
+          <IconMicrophoneOff style={iconStyle} />
+        )}
       </ActionIcon>
       <ActionIcon
         variant="filled"
@@ -146,7 +158,7 @@ function Controls({
         aria-label="End call"
         onClick={endCall}
       >
-        <IconPhoneOff style={{ width: "70%", height: "70%" }} />
+        <IconPhoneOff style={iconStyle} />
       </ActionIcon>
       <Indicator color="green" disabled={!unread}>
         <ActionIcon
@@ -156,7 +168,7 @@ function Controls({
           radius="xl"
           aria-label="Chat"
         >
-          <IconMessages style={{ width: "70%", height: "70%" }} />
+          <IconMessages style={iconStyle} />
         </ActionIcon>
       </Indicator>
       <ActionIcon
@@ -166,7 +178,7 @@ function Controls({
         radius="xl"
         aria-label="Settings"
       >
-        <IconSettings style={{ width: "70%", height: "70%" }} stroke={1.5} />
+        <IconSettings style={iconStyle} stroke={1.5} />
       </ActionIcon>
     </footer>
   );
