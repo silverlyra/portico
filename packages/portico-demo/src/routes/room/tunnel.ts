@@ -54,8 +54,6 @@ export function useTunnel(
     channel.onsignal = (signal) => tunnel.deliverSignal(signal);
     tunnel.onsignal = ({ signal }) => channel.send(signal);
 
-    console.log("created Tunnel");
-
     return tunnel;
   }, [endpoint, session, channel, local, options]);
 

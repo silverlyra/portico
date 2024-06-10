@@ -193,7 +193,6 @@ export class Channel {
     if (typeof event.data !== "string") return;
 
     const message: Event = JSON.parse(event.data);
-    console.log("Channel receive", message.type);
 
     this.deliver(message);
   }

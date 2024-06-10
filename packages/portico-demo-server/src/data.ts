@@ -112,7 +112,6 @@ export class Store {
     };
 
     const send = (message: Event) => {
-      console.log(connection, "<--", message.type);
       dest.send(JSON.stringify(message));
     };
 

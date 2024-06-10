@@ -41,7 +41,6 @@ export class Tunnel extends EventTarget {
 
   private setupConnection() {
     this.impl.onicecandidate = ({ candidate }) => {
-      console.log("ICE candidate");
       this.candidates.add(candidate);
     };
 
@@ -70,7 +69,6 @@ export class Tunnel extends EventTarget {
     const { type, sdp } = description;
     if (!sdp) return;
 
-    console.log("SDP", description.type);
     await this.impl.setLocalDescription(description);
 
     this.dispatchEvent(
@@ -83,8 +81,6 @@ export class Tunnel extends EventTarget {
 
   /** Process a {@link Signal} from the remote peer. */
   async deliverSignal(signal: Signal) {
-    console.log("received signal", signal.type);
-
     switch (signal.type) {
       case "ice":
         for (const [candidate, media] of signal.candidates) {
@@ -257,7 +253,6 @@ class LocalCandidates {
     if (this.emitter == null) return;
 
     const signal = this.get();
-    console.log("deliver", signal);
     if (signal == null) return;
 
     this.emitter.dispatchEvent(new SignalEvent(signal));
