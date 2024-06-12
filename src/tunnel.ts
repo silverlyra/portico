@@ -49,17 +49,30 @@ export class Tunnel extends EventTarget {
     };
   }
 
-  addStream(stream: MediaStream) {
-    for (const track of stream.getTracks()) {
-      this.addTrack(track, stream);
+  get connection(): RTCPeerConnection {
+    return this.impl;
+  }
+
+  addStream(stream: MediaStream): TunneledStream {
+    const senders = stream
+      .getTracks()
+      .map((track) => this.impl.addTrack(track, stream));
+    return new TunneledStream(this, senders);
+  }
+
+  addTrack(track: MediaStreamTrack, stream: MediaStream): TunneledTrack {
+    return new TunneledTrack(this, this.impl.addTrack(track, stream));
+  }
+
+  removeStream(stream: TunneledStream) {
+    for (const sender of stream.senders) {
+      this.impl.removeTrack(sender);
     }
   }
 
-  addTrack(track: MediaStreamTrack, stream: MediaStream) {
-    this.impl.addTrack(track, stream);
+  removeTrack(track: TunneledTrack) {
+    this.impl.removeTrack(track.sender);
   }
-
-  // TODO: removeStream and removeTrack
 
   async negotiate(mode: "offer" | "answer" = "offer") {
     const description = await (mode === "offer"
@@ -95,7 +108,7 @@ export class Tunnel extends EventTarget {
         }
 
         if (signal.done) {
-          await this.impl.addIceCandidate(null as unknown as undefined);
+          await this.impl.addIceCandidate();
         }
         break;
 
@@ -195,6 +208,34 @@ export class TrackEvent extends CustomEvent<{
 
   get streams(): ReadonlyArray<MediaStream> {
     return this.detail.streams;
+  }
+}
+
+export class TunneledStream {
+  public readonly senders: readonly RTCRtpSender[];
+  private readonly tunnel: WeakRef<Tunnel>;
+
+  constructor(tunnel: Tunnel, senders: readonly RTCRtpSender[]) {
+    this.senders = senders;
+    this.tunnel = new WeakRef(tunnel);
+  }
+
+  remove() {
+    this.tunnel.deref()?.removeStream(this);
+  }
+}
+
+export class TunneledTrack {
+  public readonly sender: RTCRtpSender;
+  private readonly tunnel: WeakRef<Tunnel>;
+
+  constructor(tunnel: Tunnel, sender: RTCRtpSender) {
+    this.sender = sender;
+    this.tunnel = new WeakRef(tunnel);
+  }
+
+  remove() {
+    this.tunnel.deref()?.removeTrack(this);
   }
 }
 

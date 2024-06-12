@@ -1,5 +1,7 @@
 export {
   Tunnel,
+  TunneledStream,
+  TunneledTrack,
   type TunnelOptions,
   type EventHandler,
   SignalEvent,
