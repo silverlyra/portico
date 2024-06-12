@@ -1,4 +1,6 @@
 export {
+  DataChannelEvent,
+  type DataChannelOptions,
   Tunnel,
   TunneledStream,
   TunneledTrack,

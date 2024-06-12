@@ -40,6 +40,10 @@ export class Tunnel extends EventTarget {
   }
 
   private setupConnection() {
+    this.impl.ondatachannel = (event) => {
+      this.dispatchEvent(DataChannelEvent.fromRTC(event));
+    };
+
     this.impl.onicecandidate = ({ candidate }) => {
       this.candidates.add(candidate);
     };
@@ -51,6 +55,15 @@ export class Tunnel extends EventTarget {
 
   get connection(): RTCPeerConnection {
     return this.impl;
+  }
+
+  open(label: string, options?: DataChannelOptions): RTCDataChannel {
+    const { binaryType, ...config } = options ?? {};
+
+    const channel = this.impl.createDataChannel(label, config);
+    if (binaryType) channel.binaryType = binaryType;
+
+    return channel;
   }
 
   addStream(stream: MediaStream): TunneledStream {
@@ -166,6 +179,11 @@ export class Tunnel extends EventTarget {
   }
 }
 
+export interface DataChannelOptions extends RTCDataChannelInit {
+  /** Sets how binary data will be represented in `message` events. */
+  binaryType: RTCDataChannel["binaryType"];
+}
+
 interface TunnelHandlers {
   signal: EventHandler<Tunnel, SignalEvent>;
   track: EventHandler<Tunnel, TrackEvent>;
@@ -175,6 +193,30 @@ export type EventHandler<T extends object, E extends Event> = (
   this: T,
   event: E
 ) => void;
+
+export class DataChannelEvent extends CustomEvent<{
+  readonly channel: RTCDataChannel;
+}> {
+  static fromRTC({ channel }: RTCDataChannelEvent): DataChannelEvent {
+    return new DataChannelEvent(channel);
+  }
+
+  constructor(channel: RTCDataChannel) {
+    super("datachannel", { detail: { channel } });
+  }
+
+  get channel(): RTCDataChannel {
+    return this.detail.channel;
+  }
+
+  get label(): string {
+    return this.channel.label;
+  }
+
+  get protocol(): string {
+    return this.channel.protocol;
+  }
+}
 
 export class SignalEvent extends CustomEvent<{ readonly signal: Signal }> {
   constructor(signal: Signal) {
