@@ -151,15 +151,7 @@ export class Tunnel extends EventTarget {
   }
 
   set onsignal(handler: EventHandler<Tunnel, SignalEvent> | null | undefined) {
-    if (this.handlers.signal) {
-      this.removeEventListener("signal", this.handlers.signal as EventListener);
-    }
-    if (handler) {
-      handler = handler.bind(this);
-      this.addEventListener("signal", handler as EventListener);
-    }
-
-    this.handlers.signal = handler ?? undefined;
+    this.setHandler("signal", handler);
   }
 
   get ontrack(): EventHandler<Tunnel, TrackEvent> | undefined {
@@ -167,15 +159,22 @@ export class Tunnel extends EventTarget {
   }
 
   set ontrack(handler: EventHandler<Tunnel, TrackEvent> | null | undefined) {
-    if (this.handlers.track) {
-      this.removeEventListener("track", this.handlers.track as EventListener);
+    this.setHandler("track", handler);
+  }
+
+  private setHandler<const E extends keyof TunnelHandlers>(
+    event: E,
+    handler: TunnelHandlers[E] | null | undefined
+  ) {
+    if (this.handlers[event]) {
+      this.removeEventListener(event, this.handlers[event] as EventListener);
     }
     if (handler) {
-      handler = handler.bind(this);
-      this.addEventListener("track", handler as EventListener);
+      handler = handler.bind(this) as TunnelHandlers[E];
+      this.addEventListener(event, handler as EventListener);
     }
 
-    this.handlers.track = handler ?? undefined;
+    this.handlers[event] = handler ?? undefined;
   }
 }
 
